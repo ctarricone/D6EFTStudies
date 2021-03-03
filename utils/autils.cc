@@ -378,7 +378,7 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
       vector<TLorentzVector> v_f_jets ;
       vector<TLorentzVector> v_f_gluons ;
       vector<TLorentzVector> v_f_quarks ;
-      vector<TLorentzVector> v_f_photons ;
+      //      vector<TLorentzVector> v_f_photons ;
 
       vector<pair<int, TLorentzVector>> v_f_leptons ;
       vector<pair<int, TLorentzVector>> v_f_neutrinos ;
@@ -417,10 +417,10 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
                 } // leptons
 
 	      //photons
-	      else if (abs (reader.hepeup.IDUP.at (iPart)) == 22 ) 
+	      /*   else if (abs (reader.hepeup.IDUP.at (iPart)) == 22 ) 
                 {
                   v_f_photons.push_back (dummy) ;       
-                } // photons
+		  } // photons*/
 
               // neutrinos
               else if (abs (reader.hepeup.IDUP.at (iPart)) == 12 ||
@@ -470,7 +470,9 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
       float ptZ   = -1. ;
       float ptee  = -1. ;
       float ptmumu  = -1. ;
-      float m4l   = -1. ;
+      float m4l     = -1. ;
+      float mll     = -1.;
+      float ptll    = -1.;
 
       //cout << ">>> FillNtuple:: this is the jets' size ::  " << v_f_jets.size() << endl;
       //cout << "                 these are from quarks ::  " << v_f_quarks.size() << endl;
@@ -508,21 +510,12 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
           //cout << ">>>>>> mjj ::  " << mjj  << endl;
         }
 
-      TLorentzVector v_ll; 
-
-      TLorentzVector v_4l;
-
       TLorentzVector ME ;
 
       for (int inu = 0 ; inu < v_f_neutrinos.size () ; inu++)
         {
           ME += v_f_neutrinos.at (inu) .second ;
         }
-
-      if (v_f_leptons.size()>=2) 
-        {
-          v_ll = v_f_leptons.at (0).second + v_f_leptons.at (1).second ;
-        }     	  
 
       if (applyCuts)
         {
@@ -565,6 +558,9 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
   
 	  int sumtype_e=0;
 	  int sumtype_m=0;
+
+	  mll  = ( v_f_leptons.at(0).second + v_f_leptons.at(1).second ).M();
+	  ptll = ( v_f_leptons.at(0).second + v_f_leptons.at(1).second ).Pt();
 
 	  for (int l = 0 ; l < v_f_leptons.size () ; l++)
 	    {
@@ -641,7 +637,7 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
 	      TLorentzVector v_ee = v_goodElectrons[0]+v_goodElectrons[1];
 	      TLorentzVector v_mm =     v_goodMuons[0]+    v_goodMuons[1];
   
-	      //m_ll selection
+	      //mZ selection
               if (v_ee.M() <60 || v_ee.M() >120) continue;
 	      if (v_mm.M() <60 || v_mm.M() >120) continue;
 
@@ -656,17 +652,17 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
 	      */
 
 	      //Main variables ptZ and m4l
-	      ptee = v_ee.Pt();
+	      ptee   = v_ee.Pt();
 	      ptmumu = v_mm.Pt();
-	      ptZ = fabs(massZ -v_ee.M()) < fabs(massZ -v_mm.M()) ? v_ee.Pt() : v_mm.Pt();
-	      m4l= (v_goodElectrons[0]+v_goodElectrons[1]+v_goodMuons[0]+v_goodMuons[1]).M();
+	      ptZ    = fabs(massZ -v_ee.M()) < fabs(massZ -v_mm.M()) ? v_ee.Pt() : v_mm.Pt();
+	      m4l    = (v_goodElectrons[0]+v_goodElectrons[1]+v_goodMuons[0]+v_goodMuons[1]).M();
 
 	      // cout << "fabs(massZ -m_ee) ="<< fabs(massZ -v_ee.M()) << " fabs(massZ -m_mm) ="<< fabs(massZ -v_mm.M()) << endl;
-	      cout <<" m4l =" <<m4l<< " ptZ =" << ptZ <<" ptee ="<<v_ee.Pt() << " ptmumu =" << v_mm.Pt() << endl; 
+	      // cout <<" m4l =" <<m4l<< " ptZ =" << ptZ <<" ptee ="<<v_ee.Pt() << " ptmumu =" << v_mm.Pt() << endl; 
            }
 	  
 	  //m4l selection
-	  if(v_4l.M () < 180) continue ;
+	  if(m4l < 180) continue ;
 
 	  //No Zeta* cuts in VBS ZZ analysis
           //if (fabs (zetaStar (v_f_jets.at (0).Eta (), v_f_jets.at (1).Eta (), v_f_leptons.at (0).second.Eta ())) > 0.75) continue ;
@@ -678,8 +674,8 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
       //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
       
       Ntuple.setvalue ("mjj", mjj) ;
-      Ntuple.setvalue ("mll", v_ll.M ()) ;
-      //      Ntuple.setvalue ("m4l", v_4l.M ()) ;
+      Ntuple.setvalue ("mll", mll) ; 
+     
       Ntuple.setvalue ("m4l", m4l) ;      
       Ntuple.setvalue ("ptZ", ptZ);
       Ntuple.setvalue ("ptee", ptee);
@@ -712,7 +708,7 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
         }
 
       Ntuple.setvalue ("met", ME.Pt ()) ;
-      Ntuple.setvalue ("ptll", v_ll.Pt ()) ;
+      Ntuple.setvalue ("ptll", ptll ) ;
 
       Ntuple.fill (eventWeight) ;
 
