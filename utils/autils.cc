@@ -356,7 +356,7 @@ float deltaPhi (float phi1, float phi2)
 
 bool largerPt (const pair <int, TLorentzVector>& i, const pair <int, TLorentzVector>& j)
 {
-  return (i.second.Pt () < j.second.Pt ()) ;
+  return (i.second.Pt () > j.second.Pt ()) ;
 }
 
 
@@ -542,9 +542,12 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
 	    }
 
 	  //Leading(sub-) jets selection
-          if (ptj1 < 30 || etaj1 > 4.7) continue ;
-          if (ptj2 < 30 || etaj2 > 4.7) continue ;
+          if (ptj1 < 30 || fabs(etaj1) > 4.7) continue ;
+          if (ptj2 < 30 || fabs(etaj2) > 4.7) continue ;
 	  //          if (ME.Pt () < 40) continue ; NO METselection in ZZ
+
+	  if ( fabs(v_f_jets.at (0).Pt()- v_goodJets[0].Pt()) >0.01) cout << "different j0 than good j0" << endl;
+	  if ( fabs(v_f_jets.at (1).Pt()- v_goodJets[1].Pt()) >0.01) cout << "different j1 than good j1" << endl;
 
 	  //VBS ZZ enriched selection LOOSE WP
           if (fabs (v_f_jets.at (0).Eta () - v_f_jets.at (1).Eta ()) < 2.4 ) continue ; 
@@ -554,7 +557,7 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
 	  vector<TLorentzVector> v_goodMuons ;	  
 	  vector<TLorentzVector> v_goodElectrons ;	 
 	  bool pTl1min = false;
-	  bool pTl2min = false;
+	  int  pTl2min = 0;
   
 	  int sumtype_e=0;
 	  int sumtype_m=0;
@@ -571,8 +574,8 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
 		{
 		  if ( abs(type) == 11 || abs(type) == 13 ) 
 		    {
-		      if (v_l.Pt() > 20) pTl1min = true; //ptmin lep1 in event
-		      if (v_l.Pt() > 10) pTl2min = true; //ptmin lep2 in event
+		      if (v_l.Pt() > 20) pTl1min = true; //ptmin 20 at least single lep in event
+		      if (v_l.Pt() > 10) pTl2min +=1;    //ptmin 10 at least two    leps in event
 
 		      //correct lepton pT if neighbouring photon - no FSR @LHE level
 		      /*      for (int y = 0 ; y < v_f_photons.size () ; y++)
@@ -604,7 +607,8 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
 	    }
 
 	  //Leading(sub-) leptons selection
-	  if (!pTl1min || !pTl2min ) continue;
+	  //	  if (!pTl1min || pTl2min<2 ) continue;
+	  if (!pTl1min || pTl2min<2 ) continue;
 
 	  //Check pairwise OS electrons and muons 
 	  if ( sumtype_e != 0 || sumtype_m != 0 ) continue;
@@ -690,9 +694,12 @@ double fillNtuple (LHEF::Reader & reader, ntuple & Ntuple, int max, bool applyCu
       Ntuple.setvalue ("deltaetajj", fabs (etaj1 - etaj2)) ;
       Ntuple.setvalue ("deltaphijj", deltaPhi (phij1, phij2)) ;
 
-// Ordering v_f_Leptons according to Pt.
+      // Ordering v_f_Leptons according to Pt.
 
+      //      cout << "--------------------------"<< endl;
+      // cout << v_f_leptons.at(0).second.Pt() << " " << v_f_leptons.at(1).second.Pt() << " " << v_f_leptons.at(2).second.Pt() <<" " <<  v_f_leptons.at(3).second.Pt() << endl ;
       sort (v_f_leptons.begin (), v_f_leptons.end (), largerPt ) ;     
+      //cout << v_f_leptons.at(0).second.Pt() << " " << v_f_leptons.at(1).second.Pt() << " " << v_f_leptons.at(2).second.Pt() <<" " <<  v_f_leptons.at(3).second.Pt() << endl ;
 
       float ptl = 0 ;
       float etal = 0 ;
