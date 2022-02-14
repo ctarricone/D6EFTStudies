@@ -24,10 +24,12 @@ usual_errors.append ('stty: standard input: Inappropriate ioctl for device')
 
 def readCondorReport (path):
     lista = glob.glob (path+ '/*.log')
+#    print (lista)
     if len (lista) > 1:
         print ('too many log files, exiting\n')
         sys.exit (1)
     filename = lista[0]
+ #   print (filename)
     normal = 0
     endcodes = []
     jobID = '-1'
@@ -168,9 +170,19 @@ def calcTotXS (singleGenInfoList):
 
     XS = sum (x / (e*e) for x, e, n in singleGenInfoList)
     sumW = sum (1. / (e*e) for x, e, n in singleGenInfoList)
+    print singleGenInfoList
+
+
+    #if not sumW < 0.0001:
+    print (XS)
+    print (sumW)
+
     XS = XS / sumW
     XSe = sqrt (1. / sumW)
-
+   # else:
+   #     raise ZeroDivisionError
+   # else:
+   #     print('SM case or sumW equal to zero replacing XS by known SM value')
     return [XS, XSe]
 
 
@@ -182,14 +194,43 @@ def makeNtupleProdCfg (basefolder,outfolder, LHEfiles, XS):
     processName = basefolder.split ('/')[-1]
     processName = processName.replace ('_results', '')
 
-    configFileName = basefolder + '/read_03_input.cfg'
+##    configFileName = basefolder + '/read_03_input.cfg'
+    configFileName = 'gen/'+ processName + '_results/read_03_input.cfg'    
+#    configFileName = processName + '_results/read_03_input.cfg'    
+
     outf = open (configFileName, 'w')
 
     outf.write ('[general]\n')
     outf.write ('samples = ' + processName + '\n')
-    outf.write ('variables = mjj, mll, ptj1, ptj2, etaj1, etaj2, phij1, phij2, ptl1, ptl2, etal1, etal2, met, ptll, deltaetajj, deltaphijj\n')
+#    outf.write ('variables = mjj, mll, ptj1, ptj2, etaj1, etaj2, phij1, phij2, ptl1, ptl2, ptZZ, etal1, etal2, met, ptll, ptemuplus, ptemuminus, deltaetajj, deltaphijj, m4l, m4ljj, ptZ, ptee, ptmumu, mee, mmumu\n')
+#    outf.write ('variables = mjj, mll, ptj1, ptj2, etaj1, etaj2, phij1, phij2, ptl1, ptl2, etal1, etal2, met, ptll, deltaetajj, deltaphijj, m4l, m4ljj, ptZ, ptee, ptmumu, mee, mmumu\n')
+##CT: new variables ptRel added
+#    outf.write ('variables = mjj, mll, ptj1, ptj2, etaj1, etaj2, phij1, phij2, ptl1, ptl2, etal1, etal2, met, ptll, deltaetajj, deltaphijj, m4l, m4ljj, ptZ, ptee, ptmumu, mee, mmumu, ptl1RelZZ, ptl2RelZZ, ptj1RelZZ, ptj2RelZZ, pteeRelZZ, ptl1RelZ1, ptl2RelZ1, ptj1RelZ1, ptj2RelZ1, ptl1RelZ2, ptl2RelZ2, ptj1RelZ2, ptj2RelZ2, ptZ1RelZ2, ptVRelZ1, ptVRelZ2, ptV, ptemuplus, ptemuminus\n')
+#CT: new variables FWM added
+#    outf.write ('variables = mjj, mll, ptj1, ptj2, etaj1, etaj2, phij1, phij2, ptl1, ptl2, etal1, etal2, met, ptll, deltaetajj, deltaphijj, m4l, m4ljj, ptZ, ptee, ptmumu, mee, mmumu, ptl1RelZZ, ptl2RelZZ, ptj1RelZZ, ptj2RelZZ, pteeRelZZ, ptl1RelZ1, ptl2RelZ1, ptj1RelZ1, ptj2RelZ1, ptl1RelZ2, ptl2RelZ2, ptj1RelZ2, ptj2RelZ2, ptZ1RelZ2, ptVRelZ1, ptVRelZ2, ptV, ptemuplus, ptemuminus, H0sjj, H0tjj, H0zjj, H1sjj, H1tjj, H1zjj, H2sjj, H2tjj, H2zjj, H0sll, H0tll, H0zll, H1sll, H1tll, H1zll, H2sll, H2tll, H2zll, H6tjj, H6tll, TotH0s, TotH0t, TotH0z, TotH1s, TotH1t, TotH1z, TotH2s, TotH2t, TotH2z, TotH6t\n')
+    
+    myVars ='mll, ptl1, ptl2, etal1, etal2, ptll, ptZ, ptl1RelZ1, ptl2RelZ1, TotH0s, TotH0t, TotH0z, TotH1s, TotH1t, TotH1z, TotH2s, TotH2t, TotH2z, TotH6t, H0sll, H0tll, H0zll, H1sll, H1tll, H1zll, H2sll, H2tll, H2zll, H6tll'
+    if processName.startswith('ZZ'):
+        myVars+=', m4l, ptee, ptmumu, mee, mmumu, ptl1RelZZ, ptl2RelZZ, pteeRelZZ, ptl1RelZ2, ptl2RelZ2, ptZ1RelZ2, ptemuplus, ptemuminus' 
+    if processName.startswith('ZZ2e2mu') or processName.startswith('VZ'): 
+        myVars+=', mjj, ptj1, ptj2, etaj1, etaj2, phij1, phij2, deltaetajj, deltaphijj, ptj1RelZ1, ptj2RelZ1, ptV, ptVRelZ1, H0sjj, H0tjj, H0zjj, H1sjj, H1tjj, H1zjj, H2sjj, H2tjj, H2zjj,H6tjj' 
+    if processName.startswith('ZZ2e2mu'): 
+        myVars+=', m4ljj, ptj1RelZZ, ptj2RelZZ, ptj1RelZ2, ptj2RelZ2, ptVRelZ2, ptVRelZZ' 
+    if processName.startswith('ZZG') or processName.startswith('VZG') or processName.startswith('WZG'): 
+        myVars+=', ptGamma, etaGamma, phiGamma, ptGRelZ1' 
+    if processName.startswith('ZZG'):
+        myVars+=', ptGRelZZ' 
+    if processName.startswith('WZG'): 
+        myVars+=', ptW, met, ptl1RelWZ, ptl2RelWZ, ptl1RelW, ptl2RelW, ptWRelZ, ptWRelG, mWlept, mtWlept'
+    if processName.startswith('VZG'): 
+        myVars+=', ptl1RelG, ptl2RelG, ptj1RelG, ptj2RelG, ptGRelV, ptGRelVZ, ptjjRelZG' 
+
+#CT:TESTME: apparently completed for all the triboson channel
+
+    outf.write ('variables = '+myVars+'\n')
+
     outf.write ('outputFile = '+ outfolder +'/ntuple_' + processName + '.root\n')
-    outf.write ('applycuts = false\n')
+    outf.write ('applycuts = true\n')
     outf.write ('\n')
     outf.write ('[' + processName + ']\n')
     outf.write ('XS = ' + XS + '\n')
@@ -269,7 +310,7 @@ if __name__ == '__main__':
 
     # FIXME use the numbers to discard failed jobs
     # FIXME make a histogram of the time duration of jobs
-    readCondorReport (basefolder)
+    #readCondorReport (basefolder)
 
     # collect the list of err files
     # ---- ---- ---- ---- ---- ---- ---- ---- ---- 
@@ -285,6 +326,8 @@ if __name__ == '__main__':
     files_run = getFilesList (basefolder, '*running', [])
     discard = discard + [name.split ('_')[3] for name in files_run[1]]
 
+    discard = []
+
     for elem in discard: print ('ignoring job ' + elem)
 
     # unzip LHE files
@@ -299,6 +342,9 @@ if __name__ == '__main__':
 
     print ('checking LHE files integrity...')
     files_lhe = getFilesList (basefolder, '*.lhe', discard)
+
+    print (files_lhe)
+
     closure = [checkClosure (file) for file in files_lhe[0]]
 
     allOK = 0
@@ -325,13 +371,16 @@ if __name__ == '__main__':
     # ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 
     files_out = getFilesList (basefolder, '*.out', discard)
+#    print (files_out)
+
     XSs = [findXSwE (file) for file in files_out[0]]
 
     totXS = calcTotXS (XSs)
     print ('average XS: ' + str (totXS[0]) + ' +- ' + str (totXS[1]) + ' pb')
     print ('average XS: ' + str (1000. * totXS[0]) + ' +- ' + str (1000. * totXS[1]) + ' fb')
 
-    outputfile = open (basefolder+'/postProcess.txt' ,'w')
+    outputfile = open (basefolder+'postProcess.txt' ,'w')
+    ##outputfile = open ('postProcess.txt' ,'w')
     outputfile.write ('average XS: ' + str (totXS[0]) + ' +- ' + str (totXS[1]) + ' pb\n')
     outputfile.write ('average XS: ' + str (1000. * totXS[0]) + ' +- ' + str (1000. * totXS[1]) + ' fb\n\n')
     outputfile.write ('LHE files list:\n' + ','.join (files_lhe[0]) + '\n')
@@ -341,4 +390,5 @@ if __name__ == '__main__':
     # ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 
     makeNtupleProdCfg (basefolder,outfolderNtuple, ','.join (files_lhe[0]), str (totXS[0]))
+    #makeNtupleProdCfg (basefolder,outfolderNtuple, ','.join (files_lhe[0]), "dummy")
 
